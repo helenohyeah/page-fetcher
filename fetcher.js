@@ -33,15 +33,15 @@ const askUser = (question, path, body) => {
 };
 
 request(url, (error, response, body) => {
-  // checks for errors
+  // checks for request error
   if (error) {
     console.log('ERROR:', error.code);
     process.exit();
   }
 
-  // checks status code
+  // checks for response errors
   if (response.statusCode !== 200) {
-    console.log('Something went wrong :(', response.statusText);
+    console.log('Something went wrong: ', response.statusText);
     process.exit();
   }
 
