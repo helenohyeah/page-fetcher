@@ -14,33 +14,54 @@ const rl = readline.createInterface({
 
 const userInput = process.argv.slice(2);
 const url = userInput[0];
-const localPath = userInput[1];
+const path = userInput[1];
 
-const askUser = (question, localPath, body) => {
+// ask user for input to overwrite or exit program
+const askUser = (question, path, body) => {
   rl.question(question, (answer) => {
     if (answer.toLowerCase() === 'y') {
-      fs.writeFile(localPath, body, () => {
+      fs.writeFile(path, body, () => {
         console.log('File contents overwritten');
         process.exit();
       });
     } else if (answer.toLowerCase() === 'n') {
       process.exit();
     } else {
-      askUser('Invalid entry. Overwrite? (Y/N): ', localPath, body);
+      askUser('Invalid entry. Overwrite? (Y/N): ', path, body);
     }
   });
 };
 
 request(url, (error, response, body) => {
+  // checks for errors
+  if (error) {
+    console.log('ERROR:', error.code);
+    process.exit();
+  }
+
+  // checks status code
+  if (response.statusCode !== 200) {
+    console.log('Something went wrong :(', response.statusText);
+    process.exit();
+  }
+
+  // check if dir exists
+  fs.stat(path, (err, stats) => {
+    if (err) {
+      console.log('Invalid local path');
+      process.exit();
+    }
+  });
+
   // check if file exists
-  fs.access(localPath, (err) => {
-    if (err) { // file doesn't exist case
-      fs.writeFile(localPath, body, () => {
+  fs.access(path, (err) => {
+    if (err) { // file doesn't exist case => copy file
+      fs.writeFile(path, body, () => {
         console.log('File contents successfully copied');
         process.exit();
       });
-    } else { // file exists case
-      askUser('File already exists. Overwrite? (Y/N): ', localPath, body);
+    } else { // file exists case => ask to overwrite
+      askUser('File already exists. Overwrite? (Y/N): ', path, body);
     }
   });
 });
